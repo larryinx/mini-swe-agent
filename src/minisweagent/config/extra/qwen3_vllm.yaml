@@ -225,6 +225,11 @@ environment:
 
 model:
   model_name: "openai/Qwen3-Coder-30B-A3B-Instruct"
+
+  # Path to the model registry file (optional but recommended)
+  # This tells LiteLLM about your model's context window and costs
+  litellm_model_registry: "qwen3_model_registry.json"
+
   model_kwargs:
     # vLLM-specific configuration via LiteLLM
     api_base: "http://localhost:8000/v1"  # Change this to your vLLM server URL
