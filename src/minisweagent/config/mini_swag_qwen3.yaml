@@ -160,7 +160,7 @@ model:
   model_name: "openai//home/y3395li/models/Qwen3-Coder-30B-A3B-Instruct"
 
   # TODO: Change this to the correct path
-  litellm_model_registry: "./src/minisweagent/config/model_registry/qwen3_model_registry.json"
+  litellm_model_registry: "./src/minisweagent/config/model_registry.json"
 
   model_kwargs:
     # vLLM-specific configuration via LiteLLM
