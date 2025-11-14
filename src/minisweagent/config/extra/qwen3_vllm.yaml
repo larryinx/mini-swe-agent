@@ -213,7 +213,7 @@ agent:
   cost_limit: 3.
 
 environment:
-  cwd: "/testbed"
+  cwd: "/"
   timeout: 60
   env:
     PAGER: cat
@@ -221,20 +221,20 @@ environment:
     LESS: -R
     PIP_PROGRESS_BAR: 'off'
     TQDM_DISABLE: '1'
-  environment_class: docker
+  environment_class: singularity
 
 model:
-  model_name: "openai/Qwen3-Coder-30B-A3B-Instruct"
+  model_name: "openai//scratch/yinx/custom_models/Qwen3-Coder-30B-A3B-Instruct"
 
-  # Path to the model registry file (optional but recommended)
-  # This tells LiteLLM about your model's context window and costs
-  litellm_model_registry: "qwen3_model_registry.json"
+  # TODO: Change this to the correct path
+  litellm_model_registry: "/home/yinx/yinx/hypertok-internal/mini-swe-agent/src/minisweagent/config/model_registry/qwen3_model_registry.json"
 
   model_kwargs:
     # vLLM-specific configuration via LiteLLM
     api_base: "http://localhost:8000/v1"  # Change this to your vLLM server URL
     temperature: 0.0
     max_tokens: 4096
+    api_key: "sk"
     # If you need to pass additional parameters, add them here
     # top_p: 1.0
     # seed: 42
