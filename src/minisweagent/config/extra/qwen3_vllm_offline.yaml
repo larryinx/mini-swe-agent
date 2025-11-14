@@ -221,7 +221,12 @@ environment:
     LESS: -R
     PIP_PROGRESS_BAR: 'off'
     TQDM_DISABLE: '1'
-  environment_class: docker
+  environment_class: docker  # Change to "singularity" to use Singularity/Apptainer
+
+  # Singularity-specific settings (uncomment and configure if using Singularity)
+  # executable: "singularity"  # or "apptainer" if using Apptainer
+  # forward_env: []  # List of env vars to forward from host (e.g., ["PATH", "HOME"])
+  # sandbox_build_retries: 3  # Number of retries for building sandbox
 
 model:
   # Use the custom vLLM offline model class
