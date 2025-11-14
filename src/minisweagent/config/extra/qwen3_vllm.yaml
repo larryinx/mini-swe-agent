@@ -213,7 +213,7 @@ agent:
   cost_limit: 3.
 
 environment:
-  cwd: "/"
+  cwd: "/tmp/testbed"
   timeout: 60
   env:
     PAGER: cat
@@ -227,7 +227,7 @@ model:
   model_name: "openai//scratch/yinx/custom_models/Qwen3-Coder-30B-A3B-Instruct"
 
   # TODO: Change this to the correct path
-  litellm_model_registry: "/home/yinx/yinx/hypertok-internal/mini-swe-agent/src/minisweagent/config/model_registry/qwen3_model_registry.json"
+  litellm_model_registry: "./src/minisweagent/config/model_registry.json"
 
   model_kwargs:
     # vLLM-specific configuration via LiteLLM
