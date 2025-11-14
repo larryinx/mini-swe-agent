@@ -158,12 +158,10 @@ environment:
 
 model:
   model_name: "openai//home/y3395li/models/Qwen3-Coder-30B-A3B-Instruct"
-
-  # TODO: Change this to the correct path
-  litellm_model_registry: "./src/minisweagent/config/model_registry.json"
+  # litellm_model_registry: "./src/minisweagent/config/model_registry.json"
 
   model_kwargs:
-    # vLLM-specific configuration via LiteLLM
+    # TODO: Change this to the correct vLLM server URL
     api_base: "http://localhost:8002/v1"
     temperature: 0.0
     max_tokens: 4096
