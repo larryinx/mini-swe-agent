@@ -242,10 +242,10 @@ environment:
 
 model:
   # Model name for LiteLLM (NOT the file path!)
-  model_name: "openai/Qwen3-Coder-30B-A3B-Instruct"
+  model_name: "openai//scratch/yinx/custom_models/Qwen3-Coder-30B-A3B-Instruct"
 
   # Path to the model registry file
-  litellm_model_registry: "qwen3_model_registry.json"
+  litellm_model_registry: "./src/minisweagent/config/model_registry.json"
 
   model_kwargs:
     # vLLM server API endpoint
@@ -256,7 +256,7 @@ model:
     max_tokens: 4096
 
     # Dummy API key (vLLM doesn't need real key, but LiteLLM requires it)
-    api_key: "sk-dummy"
+    api_key: "sk"
 
     # Optional: additional parameters
     # top_p: 1.0
