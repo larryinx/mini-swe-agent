@@ -65,7 +65,10 @@ class SingularityEnvironment:
         cmd = [self.config.executable, "exec"]
 
         # Do not inherit directories and env vars from host
-        cmd.extend(["--contain", "--cleanenv"])
+        # cmd.extend(["--contain", "--cleanenv"])
+        cmd.extend(["--containall", "--cleanenv"])
+        (self.sandbox_dir / "project").mkdir(exist_ok=True)
+        (self.sandbox_dir / "scratch").mkdir(exist_ok=True)
 
         work_dir = cwd or self.config.cwd
         if work_dir and work_dir != "/":
