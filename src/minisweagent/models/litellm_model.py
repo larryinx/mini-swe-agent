@@ -1,11 +1,12 @@
 import json
 import logging
 import os
-from dataclasses import asdict, dataclass, field
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any, Literal
 
 import litellm
+from pydantic import BaseModel
 from tenacity import (
     before_sleep_log,
     retry,
@@ -20,17 +21,18 @@ from minisweagent.models.utils.cache_control import set_cache_control
 logger = logging.getLogger("litellm_model")
 
 
-@dataclass
-class LitellmModelConfig:
+class LitellmModelConfig(BaseModel):
     model_name: str
-    model_kwargs: dict[str, Any] = field(default_factory=dict)
+    model_kwargs: dict[str, Any] = {}
     litellm_model_registry: Path | str | None = os.getenv("LITELLM_MODEL_REGISTRY_PATH")
     set_cache_control: Literal["default_end"] | None = None
     """Set explicit cache control markers, for example for Anthropic models"""
+    cost_tracking: Literal["default", "ignore_errors"] = os.getenv("MSWEA_COST_TRACKING", "default")
+    """Cost tracking mode for this model. Can be "default" or "ignore_errors" (ignore errors/missing cost info)"""
 
 
 class LitellmModel:
-    def __init__(self, *, config_class: type = LitellmModelConfig, **kwargs):
+    def __init__(self, *, config_class: Callable = LitellmModelConfig, **kwargs):
         self.config = config_class(**kwargs)
         self.cost = 0.0
         self.n_calls = 0
@@ -38,6 +40,7 @@ class LitellmModel:
             litellm.utils.register_model(json.loads(Path(self.config.litellm_model_registry).read_text()))
 
     @retry(
+        reraise=True,
         stop=stop_after_attempt(int(os.getenv("MSWEA_MODEL_RETRY_STOP_AFTER_ATTEMPT", "10"))),
         wait=wait_exponential(multiplier=1, min=4, max=60),
         before_sleep=before_sleep_log(logger, logging.WARNING),
@@ -65,18 +68,25 @@ class LitellmModel:
     def query(self, messages: list[dict[str, str]], **kwargs) -> dict:
         if self.config.set_cache_control:
             messages = set_cache_control(messages, mode=self.config.set_cache_control)
-        response = self._query(messages, **kwargs)
+        response = self._query([{"role": msg["role"], "content": msg["content"]} for msg in messages], **kwargs)
         try:
-            cost = litellm.cost_calculator.completion_cost(response)
+            cost = litellm.cost_calculator.completion_cost(response, model=self.config.model_name)
+            if cost <= 0.0:
+                raise ValueError(f"Cost must be > 0.0, got {cost}")
         except Exception as e:
-            logger.critical(
-                f"Error calculating cost for model {self.config.model_name}: {e}. "
-                "Please check the 'Updating the model registry' section in the documentation at "
-                "https://klieret.short.gy/litellm-model-registry Still stuck? Please open a github issue for help!"
-            )
-            raise
+            cost = 0.0
+            if self.config.cost_tracking != "ignore_errors":
+                msg = (
+                    f"Error calculating cost for model {self.config.model_name}: {e}, perhaps it's not registered? "
+                    "You can ignore this issue from your config file with cost_tracking: 'ignore_errors' or "
+                    "globally with export MSWEA_COST_TRACKING='ignore_errors'. "
+                    "Alternatively check the 'Cost tracking' section in the documentation at "
+                    "https://klieret.short.gy/mini-local-models. "
+                    " Still stuck? Please open a github issue at https://github.com/SWE-agent/mini-swe-agent/issues/new/choose!"
+                )
+                logger.critical(msg)
+                raise RuntimeError(msg) from e
         self.n_calls += 1
-        assert cost >= 0.0, f"Cost is negative: {cost}"
         self.cost += cost
         GLOBAL_MODEL_STATS.add(cost)
         return {
@@ -87,4 +97,4 @@ class LitellmModel:
         }
 
     def get_template_vars(self) -> dict[str, Any]:
-        return asdict(self.config) | {"n_model_calls": self.n_calls, "model_cost": self.cost}
+        return self.config.model_dump() | {"n_model_calls": self.n_calls, "model_cost": self.cost}
